@@ -1,4 +1,3 @@
-
 import { Invoice, Party, Product, TransactionType, BusinessInfo, PaymentStatus, StockTransaction, StockMovementType, CashTransaction, InvoicePayment } from '../types';
 
 // Keys
@@ -72,7 +71,6 @@ export const deleteProduct = (id: string) => {
 
 export const getParties = (): Party[] => get(KEYS.PARTIES, []);
 
-// Fix: Added deleteParty which was used in Parties.tsx but not exported here
 export const deleteParty = (id: string) => {
   const parties = getParties().filter(p => p.id !== id);
   set(KEYS.PARTIES, parties);
@@ -87,18 +85,76 @@ export const saveParty = (party: Party) => {
 };
 
 export const getInvoices = (): Invoice[] => get(KEYS.INVOICES, []);
+
+export const getStockTransactions = (productId?: string): StockTransaction[] => {
+  const history = get<StockTransaction[]>(KEYS.STOCK_HISTORY, []);
+  if (productId) {
+    return history.filter(h => h.productId === productId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }
+  return history.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+};
+
+export const adjustStock = (pId: string, type: StockMovementType, qty: number, note: string) => {
+  const products = getProducts();
+  const index = products.findIndex(p => p.id === pId);
+  if (index === -1) return;
+
+  const product = products[index];
+  const previousStock = product.stock;
+  
+  // Update stock based on movement type
+  // Standard logic: PURCHASE/RETURN_IN increases, SALE/RETURN_OUT/DAMAGE/ADJUSTMENT_NEG decreases
+  // For simplicity, we just add the quantity for IN types and subtract for OUT types
+  const inTypes = [StockMovementType.PURCHASE, StockMovementType.RETURN_IN, StockMovementType.OPENING];
+  const outTypes = [StockMovementType.SALE, StockMovementType.RETURN_OUT, StockMovementType.DAMAGE];
+  
+  let change = qty;
+  if (outTypes.includes(type)) change = -Math.abs(qty);
+  if (inTypes.includes(type)) change = Math.abs(qty);
+  
+  // ADJUSTMENT can be +/-
+  if (type === StockMovementType.ADJUSTMENT) {
+      // In this app, we pass the raw value for adjustment
+      change = qty;
+  }
+
+  product.stock = previousStock + change;
+  set(KEYS.PRODUCTS, products);
+
+  // Record history
+  const history = getStockTransactions();
+  const trx: StockTransaction = {
+    id: `STK-${Date.now()}`,
+    productId: pId,
+    date: new Date().toISOString(),
+    type,
+    quantity: change,
+    previousStock,
+    newStock: product.stock,
+    note
+  };
+  history.push(trx);
+  set(KEYS.STOCK_HISTORY, history);
+};
+
 export const saveInvoice = (invoice: Invoice) => {
   const invoices = getInvoices();
   invoices.unshift(invoice);
   set(KEYS.INVOICES, invoices);
 
-  // Update Stock
+  // Update Stock & History
   const products = getProducts();
   invoice.items.forEach(item => {
     const p = products.find(prod => prod.id === item.productId);
     if (p) {
-      if (invoice.type === TransactionType.SALE) p.stock -= item.quantity;
-      if (invoice.type === TransactionType.PURCHASE) p.stock += item.quantity;
+      const prev = p.stock;
+      const moveType = invoice.type === TransactionType.SALE ? StockMovementType.SALE : StockMovementType.PURCHASE;
+      const change = invoice.type === TransactionType.SALE ? -item.quantity : item.quantity;
+      
+      p.stock += change;
+      
+      // Record stock transaction
+      adjustStock(p.id, moveType, item.quantity, `Invoice Ref: ${invoice.id.split('-')[1]}`);
     }
   });
   set(KEYS.PRODUCTS, products);
@@ -131,8 +187,6 @@ export const deleteCashTransaction = (id: string) => {
   set(KEYS.CASHBOOK, trxs);
 };
 
-export const getStockTransactions = (productId?: string): StockTransaction[] => [];
-export const adjustStock = (pId: string, type: StockMovementType, qty: number, note: string) => {};
 export const exportData = () => JSON.stringify(localStorage);
 export const importData = (data: string) => {
   try {
