@@ -102,9 +102,6 @@ export const adjustStock = (pId: string, type: StockMovementType, qty: number, n
   const product = products[index];
   const previousStock = product.stock;
   
-  // Update stock based on movement type
-  // Standard logic: PURCHASE/RETURN_IN increases, SALE/RETURN_OUT/DAMAGE/ADJUSTMENT_NEG decreases
-  // For simplicity, we just add the quantity for IN types and subtract for OUT types
   const inTypes = [StockMovementType.PURCHASE, StockMovementType.RETURN_IN, StockMovementType.OPENING];
   const outTypes = [StockMovementType.SALE, StockMovementType.RETURN_OUT, StockMovementType.DAMAGE];
   
@@ -112,19 +109,16 @@ export const adjustStock = (pId: string, type: StockMovementType, qty: number, n
   if (outTypes.includes(type)) change = -Math.abs(qty);
   if (inTypes.includes(type)) change = Math.abs(qty);
   
-  // ADJUSTMENT can be +/-
   if (type === StockMovementType.ADJUSTMENT) {
-      // In this app, we pass the raw value for adjustment
       change = qty;
   }
 
   product.stock = previousStock + change;
   set(KEYS.PRODUCTS, products);
 
-  // Record history
-  const history = getStockTransactions();
+  const history = get<StockTransaction[]>(KEYS.STOCK_HISTORY, []);
   const trx: StockTransaction = {
-    id: `STK-${Date.now()}`,
+    id: `STK-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
     productId: pId,
     date: new Date().toISOString(),
     type,
@@ -142,24 +136,12 @@ export const saveInvoice = (invoice: Invoice) => {
   invoices.unshift(invoice);
   set(KEYS.INVOICES, invoices);
 
-  // Update Stock & History
-  const products = getProducts();
+  // Rely solely on adjustStock for data integrity
   invoice.items.forEach(item => {
-    const p = products.find(prod => prod.id === item.productId);
-    if (p) {
-      const prev = p.stock;
-      const moveType = invoice.type === TransactionType.SALE ? StockMovementType.SALE : StockMovementType.PURCHASE;
-      const change = invoice.type === TransactionType.SALE ? -item.quantity : item.quantity;
-      
-      p.stock += change;
-      
-      // Record stock transaction
-      adjustStock(p.id, moveType, item.quantity, `Invoice Ref: ${invoice.id.split('-')[1]}`);
-    }
+    const moveType = invoice.type === TransactionType.SALE ? StockMovementType.SALE : StockMovementType.PURCHASE;
+    adjustStock(item.productId, moveType, item.quantity, `Invoice: ${invoice.id.split('-')[1]}`);
   });
-  set(KEYS.PRODUCTS, products);
 
-  // Update Party Balance
   const parties = getParties();
   const party = parties.find(p => p.id === invoice.partyId);
   if (party) {

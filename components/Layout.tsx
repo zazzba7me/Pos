@@ -8,7 +8,7 @@ import {
   BookOpen,
   Barcode,
   MoreHorizontal,
-  Circle
+  Plus
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -117,7 +117,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange }) => 
             onClick={() => onTabChange('inventory')}
             className="zazzba-gradient p-4 rounded-full text-white shadow-xl shadow-bkash-500/40 active:scale-75 transition-all"
           >
-            <PlusIcon size={24} />
+            <Plus size={24} strokeWidth={3} />
           </button>
         </div>
         <BottomTab id="cashbook" icon={BookOpen} label="Cash" />
@@ -139,12 +139,5 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange }) => 
     </div>
   );
 };
-
-const PlusIcon = ({ size }: { size: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="12" y1="5" x2="12" y2="19"></line>
-    <line x1="5" y1="12" x2="19" y2="12"></line>
-  </svg>
-);
 
 export default Layout;
