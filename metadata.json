@@ -1,0 +1,5 @@
+{
+  "name": "Zazzba POS",
+  "description": "A comprehensive offline-first POS and ledger application with bKash branding, featuring invoice generation, inventory management, and financial reporting.",
+  "requestFramePermissions": []
+}

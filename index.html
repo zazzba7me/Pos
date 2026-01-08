@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#e2136e">
+    <title>Zazzba POS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              bkash: {
+                50: '#fdedf4',
+                100: '#fcdbe9',
+                200: '#f9b6d2',
+                300: '#f692bc',
+                400: '#f04a8e',
+                500: '#e2136e',
+                600: '#c10d5a',
+                700: '#9f0846',
+                800: '#840a3d',
+                900: '#6e0d35',
+              }
+            },
+            borderRadius: {
+              '4xl': '2rem',
+              '5xl': '2.5rem',
+            }
+          }
+        }
+      }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+      body { 
+        font-family: 'Inter', sans-serif; 
+        background-color: #fdfdfd; 
+        -webkit-tap-highlight-color: transparent;
+        overscroll-behavior-y: contain;
+        color: #1e293b;
+      }
+      
+      /* Hide scrollbars for clean mobile look */
+      ::-webkit-scrollbar { width: 0; background: transparent; }
+      
+      .glass {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+      }
+
+      .zazzba-gradient {
+        background: linear-gradient(135deg, #e2136e 0%, #f04a8e 100%);
+      }
+
+      .card-shadow {
+        box-shadow: 0 10px 30px -10px rgba(226, 19, 110, 0.1);
+      }
+
+      @media print {
+        @page { size: A4; margin: 0; }
+        body { background-color: white; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; margin: 0; padding: 0;}
+        .no-print { display: none !important; }
+        .print-only { display: block !important; }
+        #root { display: none; }
+        #print-mount { display: block !important; position: absolute; top: 0; left: 0; width: 100%; }
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+    "recharts": "https://esm.sh/recharts@^3.6.0",
+    "react-dom": "https://esm.sh/react-dom@^19.2.3",
+    "jsbarcode": "https://esm.sh/jsbarcode@3.11.6",
+    "jspdf": "https://esm.sh/jspdf@2.5.1",
+    "html2canvas": "https://esm.sh/html2canvas@1.4.1"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+    <div id="print-mount"></div>
+  </body>
+</html>
